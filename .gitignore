@@ -1,0 +1,189 @@
+**/.idea
+*.iml
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+_linux/cpp\.toolchains\.xml
+
+_linux/laf\.xml
+
+codestyles/Default\.xml
+
+colors\.scheme\.xml
+
+debugger\.xml
+
+other\.xml
+
+project\.default\.xml
+
+README\.md
+
+updates\.xml
+
+cmake-build-debug/cmake_install\.cmake
+
+cmake-build-debug/CMakeCache\.txt
+
+cmake-build-debug/CMakeFiles/3\.13\.2/CMakeCCompiler\.cmake
+
+cmake-build-debug/CMakeFiles/3\.13\.2/CMakeCXXCompiler\.cmake
+
+cmake-build-debug/CMakeFiles/3\.13\.2/CMakeDetermineCompilerABI_C\.bin
+
+cmake-build-debug/CMakeFiles/3\.13\.2/CMakeDetermineCompilerABI_CXX\.bin
+
+cmake-build-debug/CMakeFiles/3\.13\.2/CMakeSystem\.cmake
+
+cmake-build-debug/CMakeFiles/3\.13\.2/CompilerIdC/CMakeCCompilerId\.c
+
+cmake-build-debug/CMakeFiles/3\.13\.2/CompilerIdCXX/CMakeCXXCompilerId\.cpp
+
+cmake-build-debug/CMakeFiles/clion-environment\.txt
+
+cmake-build-debug/CMakeFiles/clion-log\.txt
+
+cmake-build-debug/CMakeFiles/cmake\.check_cache
+
+cmake-build-debug/CMakeFiles/CMakeDirectoryInformation\.cmake
+
+cmake-build-debug/CMakeFiles/CMakeOutput\.log
+
+cmake-build-debug/CMakeFiles/feature_tests\.bin
+
+cmake-build-debug/CMakeFiles/feature_tests\.c
+
+cmake-build-debug/CMakeFiles/feature_tests\.cxx
+
+cmake-build-debug/CMakeFiles/Makefile\.cmake
+
+cmake-build-debug/CMakeFiles/Makefile2
+
+cmake-build-debug/CMakeFiles/progress\.marks
+
+cmake-build-debug/CMakeFiles/Scrabble\.dir/build\.make
+
+cmake-build-debug/CMakeFiles/Scrabble\.dir/cmake_clean\.cmake
+
+cmake-build-debug/CMakeFiles/Scrabble\.dir/depend\.make
+
+cmake-build-debug/CMakeFiles/Scrabble\.dir/DependInfo\.cmake
+
+cmake-build-debug/CMakeFiles/Scrabble\.dir/flags\.make
+
+cmake-build-debug/CMakeFiles/Scrabble\.dir/progress\.make
+
+cmake-build-debug/CMakeFiles/TargetDirectories\.txt
+
+cmake-build-debug/Makefile
+
+cmake-build-debug/Scrabble\.cbp
+
+object_script.*.Release
+object_script.*.Debug
+*_plugin_import.cpp
+/.qmake.cache
+/.qmake.stash
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.moc
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.qmlc
+*.jsc
+Makefile*
+*build-*
+
+# Qt unit tests
+target_wrapper.*
+
+# QtCreator
+*.autosave
+
+# QtCreator Qml
+*.qmlproject.user
+*.qmlproject.user.*
+
+# QtCreator CMake
+CMakeLists.txt.user*
+
+# QtCreator 4.8< compilation database 
+compile_commands.json
+
+# QtCreator local machine specific files for imported projects
+*creator.user*
+
+cmake-build-debug/
+
+object_script.*.Release
+object_script.*.Debug
+*_plugin_import.cpp
+/.qmake.cache
+/.qmake.stash
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.moc
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.qmlc
+*.jsc
+Makefile*
+*build-*
+
+# Qt unit tests
+target_wrapper.*
+
+# QtCreator
+*.autosave
+
+# QtCreator Qml
+*.qmlproject.user
+*.qmlproject.user.*
+
+# QtCreator CMake
+CMakeLists.txt.user*
+
+# QtCreator 4.8< compilation database 
+compile_commands.json
+
+# QtCreator local machine specific files for imported projects
+*creator.user*
