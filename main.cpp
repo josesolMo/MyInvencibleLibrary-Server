@@ -27,6 +27,33 @@
 
 using namespace std;
 
+void funcionInsert(string comando)
+{
+    string subs = comando.substr(0,5);
+    if (subs.compare("INTO ") == 0 ||subs.compare("into ") == 0){
+        subs = comando.substr(5);
+        size_t space = subs.find(" ");
+        string galery = subs.substr(0, space+1);
+        cout << galery << endl;
+    }
+}
+
+void funcionSelect(string comando)
+{
+    cout << comando << endl;
+
+}
+
+void funcionUpdate(string comando)
+{
+    cout << comando << endl;
+}
+
+void funcionDelete(string comando)
+{
+    cout << comando << endl;
+}
+
 int sendJSON(string KEY, string data){
     char* str;
     int fd, numbytes;
