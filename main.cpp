@@ -369,51 +369,14 @@ int sendJSON(string KEY, string data){
     ::close(fd);
 
 }
-/*
-
-string sendGallery(string gallery, string arrowIndex) {
-
-    Gladiador* gladInstance;
-    int hit;
-
-    if ( gladiador == "1" ) {
-
-        gladInstance = juego->getGladiador1();
-
-        hit = gladInstance->isHit(pathIndexG1, stoi(arrowIndex) );
-
-        json_object *jobjHit = json_object_new_object();
-
-        json_object *jstringHit = json_object_new_string( to_string(hit).c_str());
-
-        json_object_object_add(jobjHit, "HITG1", jstringHit);
-
-        return json_object_to_json_string(jobjHit);
 
 
+string sendGallery(string gallery, string arrowIndex) {}
 
-    } else if (gladiador == "2") {
+string sendFile(string gallery, string arrowIndex) {}
 
-        gladInstance = juego->getGladiador2();
+string sendBinary(string gallery, string arrowIndex) {}
 
-        hit = gladInstance->isHit(pathIndexG2, stoi(arrowIndex) );
-
-        json_object *jobjHit = json_object_new_object();
-
-        json_object *jstringHit = json_object_new_string( to_string(hit).c_str());
-
-        json_object_object_add(jobjHit, "HITG2", jstringHit);
-
-        return json_object_to_json_string(jobjHit);
-
-    }
-    else {
-        cout << "sendHit failed" << endl;
-    }
-
-}
-
- */
 
 /**
  * Corre el servidor
@@ -494,6 +457,22 @@ int runServer() {
             json_object_object_get_ex(parsed_jsonGallery, "GALLERY", &tempGallery);
 
 
+            ///KEY: FILENAME
+            ///Obtiene un request para
+            struct json_object *tempFile;
+            cout<<"FILENAME"<<endl;
+            json_object *parsed_jsonFile = json_tokener_parse(buff);
+            json_object_object_get_ex(parsed_jsonFile, "FILENAME", &tempFile);
+
+
+            ///KEY: BINARYSTRING
+            ///Obtiene un request para
+            struct json_object *tempBinary;
+            cout<<"BINARYSTRING"<<endl;
+            json_object *parsed_jsonBinary = json_tokener_parse(buff);
+            json_object_object_get_ex(parsed_jsonBinary, "BINARYSTRING", &tempBinary);
+
+
             /*
             ///KEY: TEMPLATE
             ///Obtiene un request para
@@ -515,7 +494,7 @@ int runServer() {
                 send(fd2, aTypeZZ.c_str(), MAXDATASIZE, 0);
             }
 
-
+        */
             ///Obtendra un request para obtener la galeria
             ///Verifica que reciba los KEYS: GALLERY
             if (json_object_get_string(tempGallery) != nullptr ) {
@@ -524,7 +503,26 @@ int runServer() {
                 ///Envio al cliente
                 send(fd2, gallery.c_str(), MAXDATASIZE, 0);
             }
-            */
+
+
+            ///Obtendra un request para obtener
+            ///Verifica que reciba los KEYS: TEMPLATE
+            if (json_object_get_string(tempFile) != nullptr ) {
+                ///JSON saliente del servidor
+                string aFile = sendFile("FILENAME",json_object_get_string(tempFile));
+                ///Envio al cliente
+                send(fd2, aFile.c_str(), MAXDATASIZE, 0);
+            }
+
+
+            ///Obtendra un request para obtener
+            ///Verifica que reciba los KEYS: TEMPLATE
+            if (json_object_get_string(tempBinary) != nullptr ) {
+                ///JSON saliente del servidor
+                string aBinary = sendBinary("BINARYSTRING",json_object_get_string(tempBinary));
+                ///Envio al cliente
+                send(fd2, aBinary.c_str(), MAXDATASIZE, 0);
+            }
         }
 
         ///Reestablece el buffer
