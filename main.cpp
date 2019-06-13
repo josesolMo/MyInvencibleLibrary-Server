@@ -41,9 +41,9 @@ int sendJSON(json_object *jObj, string destinatary) {
     string ipAddress;
 
     if (destinatary == "RAID") {
-        ipAddress = "192.168.100.3";
+        ipAddress = "192.168.100.4";
     } else if (destinatary == "MetadataDB") {
-        ipAddress = "192.168.100.18";
+        ipAddress = "192.168.100.2";
     }
 
 
@@ -103,13 +103,27 @@ int sendJSON(json_object *jObj, string destinatary) {
     ///Manejo de KEYS
 
 
-    struct json_object *tempNewGalery;
-    json_object *parsed_jsonNewGalery = json_tokener_parse(recvBuff);
-    json_object_object_get_ex(parsed_jsonNewGalery, "", &tempNewGalery);
-    if (json_object_get_int(tempNewGalery) != 0){
+    ///KEY: NEWGALLERY
+    struct json_object *tempNewGallery;
+    json_object *parsed_jsonNewGallery = json_tokener_parse(recvBuff);
+    json_object_object_get_ex(parsed_jsonNewGallery, "NEWGALLERY", &tempNewGallery);
+    if (json_object_get_string(tempNewGallery) != nullptr){
         ///Variable por guardar o funcion por llamar
-        JSONReturn = json_object_get_string(tempNewGalery);
+        JSONReturn = json_object_get_string(tempNewGallery);
+        cout << JSONReturn << ": just added." << endl;
     }
+
+
+    ///KEY: NEWIMAGE
+    struct json_object *tempNewImage;
+    json_object *parsed_jsonNewImage = json_tokener_parse(recvBuff);
+    json_object_object_get_ex(parsed_jsonNewImage, "NEWIMAGE", &tempNewImage);
+    if (json_object_get_string(tempNewImage) != nullptr){
+        ///Variable por guardar o funcion por llamar
+        JSONReturn = json_object_get_string(tempNewImage);
+    }
+
+
 
 
 /*
@@ -124,10 +138,6 @@ int sendJSON(json_object *jObj, string destinatary) {
 
 
 
-
-
-
-
     ///Se limpian los Buffers
     memset(recvBuff, 0, MAXDATASIZE);
     memset(sendBuff, 0, MAXDATASIZE);
@@ -138,160 +148,93 @@ int sendJSON(json_object *jObj, string destinatary) {
 
 
 
+/**
+ * Envia un JSON a la base de datos para verificar la disponibilidad de el nombre de la galeria entrante.
+ * @param KEY
+ * @param data
+ * @param destinatary
+ * @return string (JSON)
+ */
+string sendNewGallery(string newGallery, string newGalleryKey) {
 
-int sendJSON(string KEY, string data, string destinatary){
-
-    ///Guarda el ip que se utilizara para la comunicacion
-    string ipAddress;
-
-    if (destinatary == "RAID") {
-        ipAddress = "192.168.100.3";
-    } else if (destinatary == "MetadataDB") {
-        ipAddress = "192.168.100.18";
-    }
-
-
-    char* str;
-    int fd, numbytes;
-    struct sockaddr_in client;
-
-    fd = socket(AF_INET, SOCK_STREAM, 0);
-
-    char sendBuff[MAXDATASIZE];
-    char recvBuff[MAXDATASIZE];
-
-    struct hostent *he;
-
-    if (fd < 0)
-    {
-        printf("Error : Could not create socket\n");
-        return 1;
-    }
-    else
-    {
-        client.sin_family = AF_INET;
-        client.sin_port = htons(PORT);
-        ///Toma el ipAddress dependiendo del destinatary
-        client.sin_addr.s_addr = inet_addr(ipAddress.c_str());
-        memset(client.sin_zero, '\0', sizeof(client.sin_zero));
-    }
-
-    if (::connect(fd, (const struct sockaddr *)&client, sizeof(client)) < 0)
-    {
-        printf("ERROR connecting to server\n");
-        return 1;
-    }
-
+    ///Nuevo para sendJSON
 
     ///Toma la data que le entra como parametro en la funcion
-    json_object *jstring = json_object_new_string(data.c_str());
+    json_object *jstringNewGallery = json_object_new_string(newGallery.c_str());
     ///Toma el key que le entra como parametro en la funcion
-    json_object_object_add(jObj,KEY.c_str(), jstring);
+    json_object_object_add(jObj,newGalleryKey.c_str(), jstringNewGallery);
 
-
-    if (strcpy(sendBuff, json_object_to_json_string(jObj)) == NULL) {
-        printf("ERROR strcpy()");
-        exit(-1);
-    }
-
-    if (write(fd, sendBuff, strlen(sendBuff)) == -1)
-    {
-        printf("ERROR write()");
-        exit(-1);
-    }
-
-    if ((numbytes=recv(fd,recvBuff,MAXDATASIZE,0)) < 0){
-
-        printf("Error en recv() \n");
-        exit(-1);
-    }
-
-
-    ///Manejo de KEYS
-
-
-    struct json_object *tempNewGalery;
-    json_object *parsed_jsonNewGalery = json_tokener_parse(recvBuff);
-    json_object_object_get_ex(parsed_jsonNewGalery, "", &tempNewGalery);
-    if (json_object_get_int(tempNewGalery) != 0){
-        ///Variable por guardar o funcion por llamar
-        JSONReturn = json_object_get_string(tempNewGalery);
-    }
-
-
-/*
-    struct json_object *tempXxxxx;
-    json_object *parsed_jsonXxxxx = json_tokener_parse(recvBuff);
-    json_object_object_get_ex(parsed_jsonXxxxx, "", &tempXxxxx);
-    if (json_object_get_int(tempXxxxx) != 0){
-        ///Variable por guardar o funcion por llamar
-        JSONReturn = json_object_get_int(tempXxxxx);
-    }
-*/
-
-
-
-
-
-
-
-    ///Se limpian los Buffers
-    memset(recvBuff, 0, MAXDATASIZE);
-    memset(sendBuff, 0, MAXDATASIZE);
-
-    ::close(fd);
-
-}
-
-
-
-string sendNewGallery(string KEY, string data, string destinatary) {
-
-    //sendJSON(key, data, destinatary);
-
-
-    ///Toma la data que le entra como parametro en la funcion
-    json_object *jstring = json_object_new_string(data.c_str());
-    ///Toma el key que le entra como parametro en la funcion
-    json_object_object_add(jObj,KEY.c_str(), jstring);
-    ///Envia el JSON, llamando a la funcion sendJSON con su objeto estatico
-    //sendJSON(jObj, destinatary);
-
-
-    string isAvailable = "1";//JSONReturn; //Va a enviar un JSON a la base de datos preguntando por la
-    //disponibilidad del nombre de la galeria
-
-    if (isAvailable == "1") {
-
-        bool saved = true; //Por si ocurre un error en el proceso
-
-        ///Si no se guarda
-        if (!saved) {
-            cerr << "Error in checkAvailability()" << endl;
-            isAvailable = false;
-        }
-
-    }
+    sendJSON(jObj, "MetadataDB");
 
     ///Preparacion del JSON con el resultado de la disponibilidad
     ///del nombre de la imagen por agregar.
 
-    json_object *jobjNewGallery = json_object_new_object();
-    json_object *jstringNewGallery = json_object_new_string(isAvailable.c_str()); /// "1" o "0"
-    json_object_object_add(jobjNewGallery,"NEWGALLERY", jstringNewGallery);
-    return json_object_to_json_string(jobjNewGallery);
+    if (JSONReturn == "1" || JSONReturn == "0") {
+        cout << "JSONReturn: " << JSONReturn << endl;
+        json_object *jobjSendNewGallery = json_object_new_object();
+        json_object *jstringSendNewGallery = json_object_new_string(
+                JSONReturn.c_str()); /// "1" si se agrega o "0" si no
+        json_object_object_add(jobjSendNewGallery, "NEWGALLERY", jstringSendNewGallery);
+        return json_object_to_json_string(jobjSendNewGallery);
+    }
+    else {
+        json_object *jobjError = json_object_new_object();
+        json_object *jstringError = json_object_new_string("ERROR: NEWGALLERY");
+        json_object_object_add(jobjError, "NEWGALLERY", jstringError);
+        return json_object_to_json_string(jobjError);
+
+    }
 
 }
 
 
+/**
+ * Envia un JSON a la base de datos para verificar la disponibilidad de el nombre de la imagen entrante.
+ * @param KEY
+ * @param data
+ * @param destinatary
+ * @return string (JSON)
+ */
+string sendNewImage(string newImage,  string newImageKey, string gallery, string galleryKey,
+        string binaryData, string binaryDataKey) {
+
+    ///Toma el nombre de la nueva imagen
+    json_object *jstringNewImage = json_object_new_string(newImage.c_str());
+    ///Toma el key de la nueva imagen
+    json_object_object_add(jObj,newImageKey.c_str(), jstringNewImage);
+
+    ///Toma el nombre del gallery donde se guardara la imagen
+    json_object *jstringGallery = json_object_new_string(gallery.c_str());
+    ///Toma el key de la nueva imagen
+    json_object_object_add(jObj,galleryKey.c_str(), jstringGallery);
+
+    sendJSON(jObj, "MetadataDB");
 
 
+    ///Se crea el objeto JSON que se devolvera al cliente
+    json_object *jobjSendNewImage = json_object_new_object();
 
-string sendGallery(string gallery, string arrowIndex) {}
 
-string sendFile(string gallery, string arrowIndex) {}
+    if (JSONReturn == "1" && JSONReturn == "0") {
 
-string sendBinary(string gallery, string arrowIndex) {}
+        if (JSONReturn == "1") {
+            sendJSON(jObj, "RAID");
+        }
+
+        json_object *jstringSendNewImage = json_object_new_string(JSONReturn.c_str()); /// "1" o "0"
+        json_object_object_add(jobjSendNewImage, "NEWIMAGE", jstringSendNewImage);
+        return json_object_to_json_string(jObj);
+
+    } else {
+
+        json_object *jobjError = json_object_new_object();
+        json_object *jstringError = json_object_new_string("ERROR: NEWIMAGE");
+        json_object_object_add(jobjError, "NEWIMAGE", jstringError);
+        return json_object_to_json_string(jobjError);
+
+    }
+}
+
 
 
 /**
@@ -331,7 +274,7 @@ int runServer() {
         exit(-1);
     }
 
-    printf("\nServidor 'INVINCIBLE LIBRARY' abierto.\n");
+    printf("\nServidor 'My Invincible Library - Server' abierto.\n");
 
     while (true) {
 
@@ -367,50 +310,33 @@ int runServer() {
 
 
             ///KEY: NEWGALLERY
-            ///Obtiene el nombre de la nueva galeria para verificar si puede ser guardado.
+            ///Obtiene el nombre de la nueva galeria para verificar si puede ser guardada.
             struct json_object *tempNewGallery;
             cout<<"NEWGALLERY"<<endl;
             json_object *parsed_jsonNewGallery = json_tokener_parse(buff);
             json_object_object_get_ex(parsed_jsonNewGallery, "NEWGALLERY", &tempNewGallery);
 
             ///KEY: NEWIMAGE
-            ///Obtiene el nombre de
-            /*
-            struct json_object *tempNewGallery;
-            cout<<"NEWGALLERY"<<endl;
-            json_object *parsed_jsonNewGallery = json_tokener_parse(buff);
-            json_object_object_get_ex(parsed_jsonNewGallery, "NEWGALLERY", &tempNewGallery);
-*/
-
-
-
-
-
-
-
+            ///Obtiene el nombre de la nueva imagen para verificar si puede ser guardada.
+            struct json_object *tempNewImage;
+            cout<<"NEWIMAGE"<<endl;
+            json_object *parsed_jsonNewImage = json_tokener_parse(buff);
+            json_object_object_get_ex(parsed_jsonNewImage, "NEWIMAGE", &tempNewImage);
 
             ///KEY: GALLERY
-            ///Obtiene las galerias
+            ///Obtiene la galeria donde se cambiara o se retornara su contenido
             struct json_object *tempGallery;
             cout<<"GALLERY"<<endl;
             json_object *parsed_jsonGallery = json_tokener_parse(buff);
             json_object_object_get_ex(parsed_jsonGallery, "GALLERY", &tempGallery);
 
+            ///KEY: BINARYDATA
+            ///Obtiene un request para dejar el binaryData de la imagen por
+            struct json_object *tempBinaryData;
+            cout<<"BINARYDATA"<<endl;
+            json_object *parsed_jsonBinaryData = json_tokener_parse(buff);
+            json_object_object_get_ex(parsed_jsonBinaryData, "BINARYDATA", &tempBinaryData);
 
-            ///KEY: FILENAME
-            ///Obtiene un request para
-            struct json_object *tempFile;
-            cout<<"FILENAME"<<endl;
-            json_object *parsed_jsonFile = json_tokener_parse(buff);
-            json_object_object_get_ex(parsed_jsonFile, "FILENAME", &tempFile);
-
-
-            ///KEY: BINARYSTRING
-            ///Obtiene un request para
-            struct json_object *tempBinary;
-            cout<<"BINARYSTRING"<<endl;
-            json_object *parsed_jsonBinary = json_tokener_parse(buff);
-            json_object_object_get_ex(parsed_jsonBinary, "BINARYSTRING", &tempBinary);
 
 
             /*
@@ -430,55 +356,38 @@ int runServer() {
 
 
 
-            ///Obtendra un request para obtener la galeria
+            ///Obtendra un request para obtener la disponibilidad de la galeria.
             ///Verifica que reciba los KEYS: NEWGALLERY
             if (json_object_get_string(tempNewGallery) != nullptr ) {
                 ///JSON saliente del servidor
-                string newgallery = sendNewGallery("NEWGALLERY",json_object_get_string(tempNewGallery), "MetadataDB");
-
-                cout << newgallery << endl;
+                string newGallery = sendNewGallery(json_object_get_string(tempNewGallery), "NEWGALLERY");
+                cout << "newGallery: " << newGallery << endl;
 
                 ///Envio al cliente
-                send(fd2, newgallery.c_str(), MAXDATASIZE, 0);
+                send(fd2, newGallery.c_str(), MAXDATASIZE, 0);
             }
 
 
-
-
-            ///Obtendra un request para obtener la galeria
-            ///Verifica que reciba los KEYS: GALLERY
-            if (json_object_get_string(tempGallery) != nullptr ) {
+            ///Obtendra un request para obtener la disponibilidad de la nueva imagen.
+            ///Verifica que reciba los KEYS: NEWIMAGE, GALLERY & BINARYDATA
+            if (json_object_get_string(tempNewImage) != nullptr && json_object_get_string(tempGallery) != nullptr &&
+                    json_object_get_string(tempBinaryData) != nullptr) {
                 ///JSON saliente del servidor
-                string gallery = sendGallery("GALLERY",json_object_get_string(tempGallery));
-
-                cout << gallery << endl;
-
+                string newImage = sendNewImage(json_object_get_string(tempNewImage), "NEWIMAGE",
+                        json_object_get_string(tempGallery), "GALLERY",
+                        json_object_get_string(tempBinaryData), "BINARYDATA");
                 ///Envio al cliente
-                send(fd2, gallery.c_str(), MAXDATASIZE, 0);
+                send(fd2, newImage.c_str(), MAXDATASIZE, 0);
             }
 
 
 
 
 
-            ///Obtendra un request para obtener
-            ///Verifica que reciba los KEYS: TEMPLATE
-            if (json_object_get_string(tempFile) != nullptr ) {
-                ///JSON saliente del servidor
-                string aFile = sendFile("FILENAME",json_object_get_string(tempFile));
-                ///Envio al cliente
-                send(fd2, aFile.c_str(), MAXDATASIZE, 0);
-            }
 
 
-            ///Obtendra un request para obtener
-            ///Verifica que reciba los KEYS: TEMPLATE
-            if (json_object_get_string(tempBinary) != nullptr ) {
-                ///JSON saliente del servidor
-                string aBinary = sendBinary("BINARYSTRING",json_object_get_string(tempBinary));
-                ///Envio al cliente
-                send(fd2, aBinary.c_str(), MAXDATASIZE, 0);
-            }
+
+
 
 
             /*
