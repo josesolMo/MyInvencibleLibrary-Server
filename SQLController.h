@@ -19,6 +19,19 @@ public:
     string getStringToRead();
     void setStringToRead(string str);
 
+    void funcionInsert(string comando);
+
+    void funcionSelect(string comando);
+
+    void funcionUpdate(string comando);
+
+    void funcionDelete(string comando);
+
+    string columnaGET(string evaluar);
+
+    void addToTable(string columna, string value);
+
+    void makeFunction(string comando);
 };
 
 

@@ -305,7 +305,7 @@ string sendConsole(string console, string consoleKey) {
     json_object_object_add(jObj,consoleKey.c_str(), jstringConsole);
 
     ///Se manda el texto de la consola en el cliente a la clase SQLController
-    sqlController->setStringToRead(console);
+    sqlController->makeFunction(console);
 
     ///Verificacion
 
