@@ -19,7 +19,8 @@
 #include <thread>
 #include <string>
 
-#include "SQLController.h"
+
+#include "ServerController.h"
 
 #define PORT 3550
 #define BACKLOG 4
@@ -27,9 +28,10 @@
 
 using namespace std;
 
-static SQLController* sqlController;
+static ServerController* serverController;
 
 static string JSONReturnGen;
+static json_object *JSONReturnConsole;
 static string JSONReturnNombre;
 static string JSONReturnAutor;
 static string JSONReturnCreacion;
@@ -184,6 +186,15 @@ int sendJSON(json_object *jObj, string destinatary) {
         JSONReturnDescripcion = json_object_get_string(tempDescripcion);
     }
 
+    ///KEY: CONSOLE
+    struct json_object *tempConsole;
+    json_object *parsed_jsonNewConsole = json_tokener_parse(recvBuff);
+    json_object_object_get_ex(parsed_jsonNewConsole, "CONSOLE", &tempConsole);
+    if (json_object_get_string(tempConsole) != nullptr){
+        //JSONReturnGen = json_object_get_string(tempConsole);
+        JSONReturnConsole = tempConsole;
+    }
+
 
 
 /*
@@ -281,10 +292,10 @@ string sendNewImage(string newImage,  string newImageKey, string gallery, string
     json_object *jobjSendNewImage = json_object_new_object();
 
 
-    if (JSONReturnGen == "1" && JSONReturnGen == "0") {
+    if (JSONReturnGen == "1" || JSONReturnGen == "0") {
 
         if (JSONReturnGen == "1") {
-            sendJSON(jObj, "RAID");
+            //sendJSON(jObj, "RAID");
         }
 
         json_object *jstringSendNewImage = json_object_new_string(JSONReturnGen.c_str()); /// "1" o "0"
@@ -312,29 +323,35 @@ string sendConsole(string console, string consoleKey) {
     ///Redefine el jObject para eliminar sus keys antiguos
     jObj = json_object_new_object();
 
-    cout << "From console: " << console << endl;
-
     ///Toma el nombre de la nueva imagen
-    json_object *jstringConsole = json_object_new_string("1");
+    json_object *jstringConsole = json_object_new_string(console.c_str());
     ///Toma el key de la nueva imagen
     json_object_object_add(jObj,consoleKey.c_str(), jstringConsole);
 
+    ///Se manda el texto de la consola en el cliente al MetadataDB
     sendJSON(jObj, "MetadataDB");
 
-    ///Se manda el texto de la consola en el cliente a la clase SQLController
-    sqlController->setStringToRead(console);
+    ///Redefine el jObject para eliminar sus keys antiguos
+    jObj = json_object_new_object();
 
-    ///Verificacion
+
+    ///Toma el key de la nueva imagen
+    json_object_object_add(jObj,consoleKey.c_str(), JSONReturnConsole);
+
+
+    cout << "SENDING: " << json_object_to_json_string(jObj) << endl;
+
 
     return json_object_to_json_string(jObj);
 
 }
 
 
-string sendTest(string test, string testKey) {
+string sendTest() {
 
     ///KEY para probar la graficacion de cliente
     string keyForTest = "CONSOLE";
+
 
     ///Redefine el jObject para eliminar sus keys antiguos
     jObj = json_object_new_object();
@@ -441,28 +458,7 @@ string sendTest(string test, string testKey) {
 
 
 
-    /*
-    ///Instancia de jarray para pruebas
-    json_object *jarrayTest = json_object_new_array();
-
-    ///Crea el titulo y la informacion de la columna 0
-    json_object *jstringTestColumna0 = json_object_new_string("x");
-    json_object *jstringTest01 = json_object_new_string("x");
-    json_object *jstringTest02 = json_object_new_string("x");
-    json_object *jstringTest03 = json_object_new_string("x");
-    json_object *jstringTest04 = json_object_new_string("x");
-
-    ///Para agregar al arrayTest
-    json_object_array_add(jarrayTest, jstringTestColumna);
-    json_object_array_add(jarrayTest, jstringTest1);
-    json_object_array_add(jarrayTest, jstringTest2);
-    json_object_array_add(jarrayTest, jstringTest3);
-    json_object_array_add(jarrayTest, jstringTest4);
-    */
-
-
-
-    ///Para agregar al arrayTestGeneral
+    ///Para agregar los arrayTest's al arrayTestGeneral
     json_object_array_add(jarrayTestGeneral, jarrayTest0);
     json_object_array_add(jarrayTestGeneral, jarrayTest1);
     json_object_array_add(jarrayTestGeneral, jarrayTest2);
@@ -471,11 +467,10 @@ string sendTest(string test, string testKey) {
     json_object_array_add(jarrayTestGeneral, jarrayTest5);
 
 
-    ///Toma el key de la nueva imagen
+    ///Se agrega al Obj para enviarse
     json_object_object_add(jObj, keyForTest.c_str(), jarrayTestGeneral);
 
-
-    cout << json_object_to_json_string(jObj) << endl;
+    //cout << json_object_to_json_string(jObj) << endl;
 
     return json_object_to_json_string(jObj);
 
@@ -578,46 +573,6 @@ int runServer() {
             json_object *parsed_jsonConsole = json_tokener_parse(buff);
             json_object_object_get_ex(parsed_jsonConsole, "CONSOLE", &tempConsole);
 
-
-            ///KEYS PARA GRAFICAR TABLA
-
-
-            ///KEY: FILE_ID
-            ///Obtiene un request
-            struct json_object *tempFile_Id;
-            json_object *parsed_jsonFile_Id = json_tokener_parse(buff);
-            json_object_object_get_ex(parsed_jsonFile_Id, "FILE_ID", &tempFile_Id);
-
-            ///KEY: NOMBRE
-            ///Obtiene un request
-            struct json_object *tempNombre;
-            json_object *parsed_jsonNombre = json_tokener_parse(buff);
-            json_object_object_get_ex(parsed_jsonNombre, "NOMBRE", &tempNombre);
-
-            ///KEY: AUTOR
-            ///Obtiene un request
-            struct json_object *tempAutor;
-            json_object *parsed_jsonAutor = json_tokener_parse(buff);
-            json_object_object_get_ex(parsed_jsonAutor, "AUTOR", &tempAutor);
-
-            ///KEY: CREACION
-            ///Obtiene un request
-            struct json_object *tempCreacion;
-            json_object *parsed_jsonCreacion = json_tokener_parse(buff);
-            json_object_object_get_ex(parsed_jsonCreacion, "CREACION", &tempCreacion);
-
-            ///KEY: TAMANO
-            ///Obtiene un request
-            struct json_object *tempTamano;
-            json_object *parsed_jsonTamano = json_tokener_parse(buff);
-            json_object_object_get_ex(parsed_jsonTamano, "TAMANO", &tempTamano);
-
-            ///KEY: DESCRIPCION
-            ///Obtiene un request
-            struct json_object *tempDescripcion;
-            json_object *parsed_jsonDescripcion = json_tokener_parse(buff);
-            json_object_object_get_ex(parsed_jsonDescripcion, "DESCRIPCION", &tempDescripcion);
-
             ///KEY: TEST
             ///Obtiene un request para
             struct json_object *tempTest;
@@ -673,68 +628,11 @@ int runServer() {
                 send(fd2, sendConsoleBack.c_str(), MAXDATASIZE, 0);
             }
 
-            ///KEYS FOR CLIENT TABLE
-
-/*
-            ///Obtendra un request para obtener el o los file_id's de la base de datos
-            ///Verifica que reciba los KEYS: FILE_ID
-            if (json_object_get_string(tempFile_Id) != nullptr ) {
-                ///JSON saliente del servidor
-                string variable = sendFile_Id(json_object_get_string(tempFile_Id), "FILE_ID");
-                ///Envio al cliente
-                send(fd2, variable.c_str(), MAXDATASIZE, 0);
-            }
-
-            ///Obtendra un request para obtener el o los nombres de la base de datos
-            ///Verifica que reciba los KEYS: NOMBRE
-            if (json_object_get_string(tempNombre) != 0) {
-                ///JSON saliente del servidor
-                string variable = sendNombre(json_object_get_string(tempNombre), "NOMBRE");
-                ///Envio al cliente
-                send(fd2, variable.c_str(), MAXDATASIZE, 0);
-            }
-
-            ///Obtendra un request para obtener el o los autores de la base de datos
-            ///Verifica que reciba los KEYS: AUTOR
-            if (json_object_get_string(tempAutor) != nullptr ) {
-                ///JSON saliente del servidor
-                string variable = sendAutor(json_object_get_string(tempAutor), "AUTOR");
-                ///Envio al cliente
-                send(fd2, variable.c_str(), MAXDATASIZE, 0);
-            }
-
-            ///Obtendra un request para obtener el o lo años de creacion de la base de datos
-            ///Verifica que reciba los KEYS: CREACION
-            if (json_object_get_string(tempCreacion) != 0) {
-                ///JSON saliente del servidor
-                string variable = sendCreacion(json_object_get_string(tempCreacion), "CREACION");
-                ///Envio al cliente
-                send(fd2, variable.c_str(), MAXDATASIZE, 0);
-            }
-
-            ///Obtendra un request para obtener el o los tamaños de la base de datos
-            ///Verifica que reciba los KEYS: TAMANO
-            if (json_object_get_string(tempTamano) != nullptr ) {
-                ///JSON saliente del servidor
-                string variable = sendTamano(json_object_get_string(tempTamano), "TAMANO");
-                ///Envio al cliente
-                send(fd2, variable.c_str(), MAXDATASIZE, 0);
-            }
-
-            ///Obtendra un request para obtener la o las descripciones de la base de datos
-            ///Verifica que reciba los KEYS: DESCRIPCION
-            if (json_object_get_string(tempDescripcion) != 0) {
-                ///JSON saliente del servidor
-                string variable = sendDescripcion(json_object_get_string(tempDescripcion), "DESCRIPCION");
-                ///Envio al cliente
-                send(fd2, variable.c_str(), MAXDATASIZE, 0);
-            }*/
-
             ///Obtendra un request para obtener
             ///Verifica que reciba los KEYS: TEST
             if (json_object_get_string(tempTest) != nullptr ) {
                 ///JSON saliente del servidor
-                string test = sendTest(json_object_get_string(tempTest), "TEST");
+                string test = sendTest();
                 ///Envio al cliente
                 send(fd2, test.c_str(), MAXDATASIZE, 0);
             }
@@ -769,25 +667,17 @@ int runServer() {
 
 }
 
-
-
-
-
-
+/**
+ *
+ * @return
+ */
 int main(){
 
     ///Instancia del controlador de la sintaxis de SQL.
-    sqlController = new SQLController();
+    serverController = new ServerController();
 
     ///Corre el servidor
     runServer();
-
-
-    ///Imprime el Test
-    sendTest("","");
-
-
-
 
     return 0;
 }
