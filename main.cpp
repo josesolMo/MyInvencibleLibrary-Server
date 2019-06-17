@@ -32,11 +32,6 @@ static ServerController* serverController;
 
 static string JSONReturnGen;
 static json_object *JSONReturnConsole;
-static string JSONReturnNombre;
-static string JSONReturnAutor;
-static string JSONReturnCreacion;
-static string JSONReturnTamano;
-static string JSONReturnDescripcion;
 
 
 ///Creacion del JSON por enviar
@@ -133,59 +128,6 @@ int sendJSON(json_object *jObj, string destinatary) {
         JSONReturnGen = json_object_get_string(tempNewImage);
     }
 
-
-    ///KEYS PARA GRAFICAR TABLA
-
-
-    ///KEY: FILE_ID
-    struct json_object *tempFile_Id;
-    json_object *parsed_jsonFile_Id = json_tokener_parse(recvBuff);
-    json_object_object_get_ex(parsed_jsonFile_Id, "FILE_ID", &tempFile_Id);
-    if (json_object_get_int(tempFile_Id) != 0) {
-        ///Variable por guardar o funcion por llamar
-        JSONReturnGen = json_object_get_string(tempFile_Id);
-    }
-
-    ///KEY: NOMBRE
-    struct json_object *tempNombre;
-    json_object *parsed_jsonNombre = json_tokener_parse(recvBuff);
-    json_object_object_get_ex(parsed_jsonNombre, "NOMBRE", &tempNombre);
-    if (json_object_get_int(tempNombre) != 0) {
-        JSONReturnNombre = json_object_get_string(tempNombre);
-    }
-
-    ///KEY: AUTOR
-    struct json_object *tempAutor;
-    json_object *parsed_jsonAutor = json_tokener_parse(recvBuff);
-    json_object_object_get_ex(parsed_jsonAutor, "AUTOR", &tempAutor);
-    if (json_object_get_int(tempAutor) != 0) {
-        JSONReturnAutor = json_object_get_string(tempAutor);
-    }
-
-    ///KEY: CREACION
-    struct json_object *tempCreacion;
-    json_object *parsed_jsonCreacion = json_tokener_parse(recvBuff);
-    json_object_object_get_ex(parsed_jsonCreacion, "CREACION", &tempCreacion);
-    if (json_object_get_int(tempCreacion) != 0) {
-        JSONReturnCreacion = json_object_get_string(tempCreacion);
-    }
-
-    ///KEY: TAMANO
-    struct json_object *tempTamano;
-    json_object *parsed_jsonTamano = json_tokener_parse(recvBuff);
-    json_object_object_get_ex(parsed_jsonTamano, "TAMANO", &tempTamano);
-    if (json_object_get_int(tempTamano) != 0) {
-        JSONReturnTamano = json_object_get_string(tempTamano);
-    }
-
-    ///KEY: DESCRIPCION
-    struct json_object *tempDescripcion;
-    json_object *parsed_jsonDescripcion = json_tokener_parse(recvBuff);
-    json_object_object_get_ex(parsed_jsonDescripcion, "DESCRIPCION", &tempDescripcion);
-    if (json_object_get_int(tempDescripcion) != 0) {
-        JSONReturnDescripcion = json_object_get_string(tempDescripcion);
-    }
-
     ///KEY: CONSOLE
     struct json_object *tempConsole;
     json_object *parsed_jsonNewConsole = json_tokener_parse(recvBuff);
@@ -195,6 +137,16 @@ int sendJSON(json_object *jObj, string destinatary) {
         JSONReturnConsole = tempConsole;
     }
 
+    ///KEY: INITIAL
+    struct json_object *tempInitial;
+    json_object *parsed_jsonInitial = json_tokener_parse(recvBuff);
+    json_object_object_get_ex(parsed_jsonInitial, "INITIAL", &tempInitial);
+    if (json_object_get_string(tempInitial) != 0) {
+        ///Variable por guardar o funcion por llamar
+        cout << "Initial Galleries" << endl;
+        JSONReturnConsole = tempInitial;
+    }
+
 
 
 /*
@@ -202,7 +154,7 @@ int sendJSON(json_object *jObj, string destinatary) {
     struct json_object *temp;
     json_object *parsed_json = json_tokener_parse(recvBuff);
     json_object_object_get_ex(parsed_json, "KEY", &temp);
-    if (json_object_get_int(temp) != 0) {
+    if (json_object_get_string(temp) != 0) {
         ///Variable por guardar o funcion por llamar
         JSONReturnGen = json_object_get_string(temp);
     }
@@ -346,6 +298,34 @@ string sendConsole(string console, string consoleKey) {
 
 }
 
+/**
+ * Obtiene la lista inicial de galerias e imagenes para iniciar el cliente
+ * @param initial
+ * @param initialKey
+ * @return JSON
+ */
+string sendInitial(string initial, string initialKey) {
+
+    ///Redefine el jObject para eliminar sus keys antiguos
+    jObj = json_object_new_object();
+
+    ///Toma el nombre de la nueva imagen
+    json_object *jstringConsole = json_object_new_string(initial.c_str());
+    ///Toma el key de la nueva imagen
+    json_object_object_add(jObj,initialKey.c_str(), jstringConsole);
+
+    ///Se manda el texto de la consola en el cliente al MetadataDB
+    sendJSON(jObj, "MetadataDB");
+
+    ///Toma el key de la nueva imagen
+    json_object_object_add(jObj,initialKey.c_str(), JSONReturnConsole);
+
+    return json_object_to_json_string(jObj);
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 string sendTest() {
 
@@ -477,6 +457,10 @@ string sendTest() {
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 /**
  * Corre el servidor.
  * @return int
@@ -573,6 +557,12 @@ int runServer() {
             json_object *parsed_jsonConsole = json_tokener_parse(buff);
             json_object_object_get_ex(parsed_jsonConsole, "CONSOLE", &tempConsole);
 
+            ///KEY: INITIAL
+            ///Obtiene un request para obtener las galerias e imagenes en la base de datos
+            struct json_object *tempInitial;
+            json_object *parsed_jsonInitial = json_tokener_parse(buff);
+            json_object_object_get_ex(parsed_jsonInitial, "INITIAL", &tempInitial);
+
             ///KEY: TEST
             ///Obtiene un request para
             struct json_object *tempTest;
@@ -629,6 +619,15 @@ int runServer() {
             }
 
             ///Obtendra un request para obtener
+            ///Verifica que reciba los KEYS: INITIAL
+            if (json_object_get_string(tempInitial) != nullptr ) {
+                ///JSON saliente del servidor
+                string sendInitialData = sendInitial(json_object_get_string(tempInitial), "INITIAL");
+                ///Envio al cliente
+                send(fd2, sendInitialData.c_str(), MAXDATASIZE, 0);
+            }
+
+            ///Obtendra un request para obtener
             ///Verifica que reciba los KEYS: TEST
             if (json_object_get_string(tempTest) != nullptr ) {
                 ///JSON saliente del servidor
@@ -666,6 +665,7 @@ int runServer() {
     close(fd2);
 
 }
+
 
 /**
  *
