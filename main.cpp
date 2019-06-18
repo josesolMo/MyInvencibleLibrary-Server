@@ -1,6 +1,4 @@
-//
-// Created by jose on 08/06/19.
-//
+
 #include <iostream>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -12,13 +10,10 @@
 #include <cstring>
 #include <json-c/json.h>
 #include <arpa/inet.h>
-
 #include <unistd.h>
 #include <chrono>
-
 #include <thread>
 #include <string>
-
 
 #include "ServerController.h"
 
@@ -28,13 +23,19 @@
 
 using namespace std;
 
-static ServerController* serverController;
 
+/**
+ * Server de MyInvincibleLibrary
+ *
+ * @since 08/06/19
+ */
+
+
+static ServerController* serverController;
 static string JSONReturnGen;
 static json_object *JSONReturnConsole;
 
-
-///Creacion del JSON por enviar
+///Creacion inicial del JSON por enviar
 json_object *jObj = json_object_new_object();
 
 
@@ -52,8 +53,8 @@ int sendJSON(json_object *jObj, string destinatary) {
     if (destinatary == "RAID") {
         ipAddress = "192.168.100.4";
     } else if (destinatary == "MetadataDB") {
-        ipAddress = "192.168.100.2";
-    }
+        ipAddress = "192.168.100.2"; //192.168.100.5
+        }
 
 
     char* str;
@@ -143,8 +144,35 @@ int sendJSON(json_object *jObj, string destinatary) {
     json_object_object_get_ex(parsed_jsonInitial, "INITIAL", &tempInitial);
     if (json_object_get_string(tempInitial) != 0) {
         ///Variable por guardar o funcion por llamar
-        cout << "Initial Galleries" << endl;
+        cout << "Respuesta MetadataDB" << endl;
         JSONReturnConsole = tempInitial;
+    }
+
+    ///KEY: COMMIT
+    struct json_object *tempCommit;
+    json_object *parsed_jsonCommit = json_tokener_parse(recvBuff);
+    json_object_object_get_ex(parsed_jsonCommit, "COMMIT", &tempCommit);
+    if (json_object_get_string(tempCommit) != 0) {
+        ///Variable por guardar o funcion por llamar
+        JSONReturnGen = json_object_get_string(tempCommit);
+    }
+
+    ///KEY: ROLLBACK
+    struct json_object *tempRollback;
+    json_object *parsed_jsonRollback = json_tokener_parse(recvBuff);
+    json_object_object_get_ex(parsed_jsonRollback, "ROLLBACK", &tempRollback);
+    if (json_object_get_string(tempRollback) != 0) {
+        ///Variable por guardar o funcion por llamar
+        JSONReturnGen = json_object_get_string(tempRollback);
+    }
+
+    ///KEY: DELETEGALLERY
+    struct json_object *tempDeleteGallery;
+    json_object *parsed_jsonDeleteGallery = json_tokener_parse(recvBuff);
+    json_object_object_get_ex(parsed_jsonDeleteGallery, "DELETEGALLERY", &tempDeleteGallery);
+    if (json_object_get_string(tempDeleteGallery) != 0) {
+        ///Variable por guardar o funcion por llamar
+        JSONReturnGen = json_object_get_string(tempDeleteGallery);
     }
 
 
@@ -170,6 +198,33 @@ int sendJSON(json_object *jObj, string destinatary) {
 
 }
 
+
+
+/**
+ * Obtiene la lista inicial de galerias e imagenes para iniciar el cliente
+ * @param initial
+ * @param initialKey
+ * @return JSON
+ */
+string sendInitial(string initial, string initialKey) {
+
+    ///Redefine el jObject para eliminar sus keys antiguos
+    jObj = json_object_new_object();
+
+    ///Toma el nombre de la nueva imagen
+    json_object *jstringConsole = json_object_new_string(initial.c_str());
+    ///Toma el key de la nueva imagen
+    json_object_object_add(jObj,initialKey.c_str(), jstringConsole);
+
+    ///Se manda el texto de la consola en el cliente al MetadataDB
+    sendJSON(jObj, "MetadataDB");
+
+    ///Toma el key de la nueva imagen
+    json_object_object_add(jObj,initialKey.c_str(), JSONReturnConsole);
+
+    return json_object_to_json_string(jObj);
+
+}
 
 
 /**
@@ -247,7 +302,7 @@ string sendNewImage(string newImage,  string newImageKey, string gallery, string
     if (JSONReturnGen == "1" || JSONReturnGen == "0") {
 
         if (JSONReturnGen == "1") {
-            //sendJSON(jObj, "RAID");
+            sendJSON(jObj, "RAID");
         }
 
         json_object *jstringSendNewImage = json_object_new_string(JSONReturnGen.c_str()); /// "1" o "0"
@@ -299,166 +354,99 @@ string sendConsole(string console, string consoleKey) {
 }
 
 /**
- * Obtiene la lista inicial de galerias e imagenes para iniciar el cliente
- * @param initial
- * @param initialKey
- * @return JSON
+ *
+ * @param commit
+ * @param commitKey
+ * @return
  */
-string sendInitial(string initial, string initialKey) {
+string sendCommit(string commit, string commitKey) {
 
     ///Redefine el jObject para eliminar sus keys antiguos
     jObj = json_object_new_object();
 
     ///Toma el nombre de la nueva imagen
-    json_object *jstringConsole = json_object_new_string(initial.c_str());
+    json_object *jstringCommit = json_object_new_string(commit.c_str());
     ///Toma el key de la nueva imagen
-    json_object_object_add(jObj,initialKey.c_str(), jstringConsole);
+    json_object_object_add(jObj,commitKey.c_str(), jstringCommit);
 
     ///Se manda el texto de la consola en el cliente al MetadataDB
     sendJSON(jObj, "MetadataDB");
 
+    ///Redefine el jObject para eliminar sus keys antiguos
+    jObj = json_object_new_object();
+
+    ///Toma el nombre de la nueva imagen
+    json_object *jstringCommit2 = json_object_new_string(JSONReturnGen.c_str());
+
     ///Toma el key de la nueva imagen
-    json_object_object_add(jObj,initialKey.c_str(), JSONReturnConsole);
+    json_object_object_add(jObj,commitKey.c_str(), jstringCommit2);
 
     return json_object_to_json_string(jObj);
 
+
+
+
 }
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-string sendTest() {
-
-    ///KEY para probar la graficacion de cliente
-    string keyForTest = "CONSOLE";
-
+/**
+ *
+ * @param rollback
+ * @param rollbackKey
+ * @return
+ */
+string sendRollback(string rollback, string rollbackKey) {
 
     ///Redefine el jObject para eliminar sus keys antiguos
     jObj = json_object_new_object();
 
+    ///Toma el nombre de la nueva imagen
+    json_object *jstringRollback = json_object_new_string(rollback.c_str());
+    ///Toma el key de la nueva imagen
+    json_object_object_add(jObj,rollbackKey.c_str(), jstringRollback);
 
-    ///Instancia de jarray para pruebas General
-    json_object *jarrayTestGeneral = json_object_new_array();
+    ///Se manda el texto de la consola en el cliente al MetadataDB
+    sendJSON(jObj, "MetadataDB");
 
+    ///Redefine el jObject para eliminar sus keys antiguos
+    jObj = json_object_new_object();
 
-    ///Instancia de jarray para pruebas 0
-    json_object *jarrayTest0 = json_object_new_array();
-    ///Crea el titulo y la informacion de la columna 0
-    json_object *jstringTestColumna0 = json_object_new_string("FILE_ID");
-    json_object *jstringTest01 = json_object_new_string("viaje04.bmp");
-    json_object *jstringTest02 = json_object_new_string("playa.bmp");
-    json_object *jstringTest03 = json_object_new_string("gato.bmp");
-    json_object *jstringTest04 = json_object_new_string("reloj.bmp");
-    ///Para agregar al arrayTest0
-    json_object_array_add(jarrayTest0, jstringTestColumna0);
-    json_object_array_add(jarrayTest0, jstringTest01);
-    json_object_array_add(jarrayTest0, jstringTest02);
-    json_object_array_add(jarrayTest0, jstringTest03);
-    json_object_array_add(jarrayTest0, jstringTest04);
+    ///Toma el nombre de la nueva imagen
+    json_object *jstringRollback2 = json_object_new_string(JSONReturnGen.c_str());
 
-
-    ///Instancia de jarray para pruebas 1
-    json_object *jarrayTest1 = json_object_new_array();
-    ///Crea el titulo y la informacion de la columna 1
-    json_object *jstringTestColumna1 = json_object_new_string("NOMBRE");
-    json_object *jstringTest11 = json_object_new_string("Imagen1");
-    json_object *jstringTest12 = json_object_new_string("Imagen2");
-    json_object *jstringTest13 = json_object_new_string("Imagen3");
-    json_object *jstringTest14 = json_object_new_string("Imagen4");
-    ///Para agregar al arrayTest1
-    json_object_array_add(jarrayTest1, jstringTestColumna1);
-    json_object_array_add(jarrayTest1, jstringTest11);
-    json_object_array_add(jarrayTest1, jstringTest12);
-    json_object_array_add(jarrayTest1, jstringTest13);
-    json_object_array_add(jarrayTest1, jstringTest14);
-
-
-    ///Instancia de jarray para pruebas 2
-    json_object *jarrayTest2 = json_object_new_array();
-    ///Crea el titulo y la informacion de la columna 2
-    json_object *jstringTestColumna2 = json_object_new_string("AUTOR");
-    json_object *jstringTest21 = json_object_new_string("Andrey");
-    json_object *jstringTest22 = json_object_new_string("Edgar");
-    json_object *jstringTest23 = json_object_new_string("José");
-    json_object *jstringTest24 = json_object_new_string("Ruben");
-    ///Para agregar al arrayTest2
-    json_object_array_add(jarrayTest2, jstringTestColumna2);
-    json_object_array_add(jarrayTest2, jstringTest21);
-    json_object_array_add(jarrayTest2, jstringTest22);
-    json_object_array_add(jarrayTest2, jstringTest23);
-    json_object_array_add(jarrayTest2, jstringTest24);
-
-
-    ///Instancia de jarray para pruebas 3
-    json_object *jarrayTest3 = json_object_new_array();
-    ///Crea el titulo y la informacion de la columna 3
-    json_object *jstringTestColumna3 = json_object_new_string("CREACION");
-    json_object *jstringTest31 = json_object_new_string("2004");
-    json_object *jstringTest32 = json_object_new_string("2013");
-    json_object *jstringTest33 = json_object_new_string("1994");
-    json_object *jstringTest34 = json_object_new_string("2019");
-    ///Para agregar al arrayTest3
-    json_object_array_add(jarrayTest3, jstringTestColumna3);
-    json_object_array_add(jarrayTest3, jstringTest31);
-    json_object_array_add(jarrayTest3, jstringTest32);
-    json_object_array_add(jarrayTest3, jstringTest33);
-    json_object_array_add(jarrayTest3, jstringTest34);
-
-
-    ///Instancia de jarray para pruebas 4
-    json_object *jarrayTest4 = json_object_new_array();
-    ///Crea el titulo y la informacion de la columna 4
-    json_object *jstringTestColumna4 = json_object_new_string("TAMANO");
-    json_object *jstringTest41 = json_object_new_string("1200x800");
-    json_object *jstringTest42 = json_object_new_string("250x250");
-    json_object *jstringTest43 = json_object_new_string("600x600");
-    json_object *jstringTest44 = json_object_new_string("4200x3600");
-    ///Para agregar al arrayTest4
-    json_object_array_add(jarrayTest4, jstringTestColumna4);
-    json_object_array_add(jarrayTest4, jstringTest41);
-    json_object_array_add(jarrayTest4, jstringTest42);
-    json_object_array_add(jarrayTest4, jstringTest43);
-    json_object_array_add(jarrayTest4, jstringTest44);
-
-
-    ///Instancia de jarray para pruebas 5
-    json_object *jarrayTest5 = json_object_new_array();
-    ///Crea el titulo y la informacion de la columna 5
-    json_object *jstringTestColumna5 = json_object_new_string("DESCRIPCION");
-    json_object *jstringTest51 = json_object_new_string("Edgar");
-    json_object *jstringTest52 = json_object_new_string("Es");
-    json_object *jstringTest53 = json_object_new_string("Muy");
-    json_object *jstringTest54 = json_object_new_string("Cabezon");
-    ///Para agregar al arrayTest5
-    json_object_array_add(jarrayTest5, jstringTestColumna5);
-    json_object_array_add(jarrayTest5, jstringTest51);
-    json_object_array_add(jarrayTest5, jstringTest52);
-    json_object_array_add(jarrayTest5, jstringTest53);
-    json_object_array_add(jarrayTest5, jstringTest54);
-
-
-
-    ///Para agregar los arrayTest's al arrayTestGeneral
-    json_object_array_add(jarrayTestGeneral, jarrayTest0);
-    json_object_array_add(jarrayTestGeneral, jarrayTest1);
-    json_object_array_add(jarrayTestGeneral, jarrayTest2);
-    json_object_array_add(jarrayTestGeneral, jarrayTest3);
-    json_object_array_add(jarrayTestGeneral, jarrayTest4);
-    json_object_array_add(jarrayTestGeneral, jarrayTest5);
-
-
-    ///Se agrega al Obj para enviarse
-    json_object_object_add(jObj, keyForTest.c_str(), jarrayTestGeneral);
-
-    //cout << json_object_to_json_string(jObj) << endl;
+    ///Toma el key de la nueva imagen
+    json_object_object_add(jObj,rollbackKey.c_str(), jstringRollback2);
 
     return json_object_to_json_string(jObj);
 
 }
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////
 
+string sendDeleteGallery(string gallery, string deleteGalleryKey) {
+
+    ///Redefine el jObject para eliminar sus keys antiguos
+    jObj = json_object_new_object();
+
+    ///Toma el nombre de la nueva imagen
+    json_object *jstringRollback = json_object_new_string(gallery.c_str());
+    ///Toma el key de la nueva imagen
+    json_object_object_add(jObj,deleteGalleryKey.c_str(), jstringRollback);
+
+    ///Se manda el texto de la consola en el cliente al MetadataDB
+    sendJSON(jObj, "MetadataDB");
+
+    ///Redefine el jObject para eliminar sus keys antiguos
+    jObj = json_object_new_object();
+
+    ///Toma el nombre de la nueva imagen
+    json_object *jstringRollback2 = json_object_new_string(JSONReturnGen.c_str());
+
+    ///Toma el key de la nueva imagen
+    json_object_object_add(jObj,deleteGalleryKey.c_str(), jstringRollback2);
+
+    return json_object_to_json_string(jObj);
+
+}
 
 
 /**
@@ -563,11 +551,23 @@ int runServer() {
             json_object *parsed_jsonInitial = json_tokener_parse(buff);
             json_object_object_get_ex(parsed_jsonInitial, "INITIAL", &tempInitial);
 
-            ///KEY: TEST
+            ///KEY: COMMIT
             ///Obtiene un request para
-            struct json_object *tempTest;
-            json_object *parsed_jsonTest = json_tokener_parse(buff);
-            json_object_object_get_ex(parsed_jsonTest, "TEST", &tempTest);
+            struct json_object *tempCommit;
+            json_object *parsed_jsonCommit = json_tokener_parse(buff);
+            json_object_object_get_ex(parsed_jsonCommit, "COMMIT", &tempCommit);
+
+            ///KEY: ROLLBACK
+            ///Obtiene un request para
+            struct json_object *tempRollback;
+            json_object *parsed_jsonRollback = json_tokener_parse(buff);
+            json_object_object_get_ex(parsed_jsonRollback, "ROLLBACK", &tempRollback);
+
+            ///KEY: DELETEGALLERY
+            ///Obtiene un request para
+            struct json_object *tempDeleteGallery;
+            json_object *parsed_jsonDeleteGallery = json_tokener_parse(buff);
+            json_object_object_get_ex(parsed_jsonDeleteGallery, "DELETEGALLERY", &tempDeleteGallery);
 
 
 
@@ -628,12 +628,30 @@ int runServer() {
             }
 
             ///Obtendra un request para obtener
-            ///Verifica que reciba los KEYS: TEST
-            if (json_object_get_string(tempTest) != nullptr ) {
+            ///Verifica que reciba los KEYS: COMMIT
+            if (json_object_get_string(tempCommit) != nullptr ) {
                 ///JSON saliente del servidor
-                string test = sendTest();
+                string commit = sendCommit(json_object_get_string(tempCommit), "COMMIT");
                 ///Envio al cliente
-                send(fd2, test.c_str(), MAXDATASIZE, 0);
+                send(fd2, commit.c_str(), MAXDATASIZE, 0);
+            }
+
+            ///Obtendra un request para obtener
+            ///Verifica que reciba los KEYS: ROLLBACK
+            if (json_object_get_string(tempRollback) != nullptr ) {
+                ///JSON saliente del servidor
+                string rollback = sendRollback(json_object_get_string(tempRollback), "ROLLBACK");
+                ///Envio al cliente
+                send(fd2, rollback.c_str(), MAXDATASIZE, 0);
+            }
+
+            ///Obtendra un request para obtener
+            ///Verifica que reciba los KEYS: DELETEGALLERY
+            if (json_object_get_string(tempDeleteGallery) != nullptr ) {
+                ///JSON saliente del servidor
+                string deleteGallery = sendDeleteGallery(json_object_get_string(tempDeleteGallery), "DELETEGALLERY");
+                ///Envio al cliente
+                send(fd2, deleteGallery.c_str(), MAXDATASIZE, 0);
             }
 
             /*
